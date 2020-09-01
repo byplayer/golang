@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 #
 # Cookbook:: golang
 # Resource:: default
@@ -49,16 +51,18 @@ property :source_method, String, default: 'all.bash'
 
 # install SCM packages
 property :scm, [true, false], default: true
-property :scm_packages, [String, Array], default: %w(git mercurial)
+property :scm_packages, [String, Array], default: %w[git mercurial]
 
 action_class do
   def bin_url
     return new_resource.url if property_is_set?(:url)
+
     new_resource.url.sub(/PLATFORM/, platform).sub(/OS/, os).sub(/VERSION/, new_resource.version)
   end
 
   def source_url
     return new_resource.source_url if property_is_set?(:source_url)
+
     new_resource.source_url.sub(/VERSION/, new_resource.source_version)
   end
 
@@ -86,9 +90,11 @@ action :install do
     mode new_resource.directory_mode
   end
 
-  directory new_resource.install_dir do
-    recursive true
-    mode new_resource.directory_mode
+  unless platform_family?('mac_os_x')
+    directory new_resource.install_dir do
+      recursive true
+      mode new_resource.directory_mode
+    end
   end
 
   directory ::File.join(Chef::Config[:file_cache_path], 'go') do
@@ -99,7 +105,7 @@ action :install do
     source 'golang.sh.erb'
     mode new_resource.directory_mode
     variables gobin: new_resource.gobin,
-              gopath:  new_resource.gobin,
+              gopath: new_resource.gobin,
               install_dir: new_resource.install_dir
   end
 
@@ -156,11 +162,11 @@ action :install do
       cwd "#{new_resource.install_dir}/go/src"
       command "./#{new_resource.source_method}"
       environment({
-        # Use the package-installed Go as the bootstrap version b/c Go is built with Go
-        GOROOT_BOOTSTRAP: "#{new_resource.install_dir}/go-#{new_resource.version}",
-        GOROOT: "#{new_resource.install_dir}/go",
-        GOBIN: "#{new_resource.install_dir}/go/bin",
-      })
+                    # Use the package-installed Go as the bootstrap version b/c Go is built with Go
+                    GOROOT_BOOTSTRAP: "#{new_resource.install_dir}/go-#{new_resource.version}",
+                    GOROOT: "#{new_resource.install_dir}/go",
+                    GOBIN: "#{new_resource.install_dir}/go/bin"
+                  })
       not_if "test -x #{::File.join(new_resource.install_dir, 'go', 'bin', 'go')}  && #{::File.join(new_resource.install_dir, 'go', 'bin', 'go')}  version | grep #{new_resource.source_version}"
     end
   end
