@@ -50,7 +50,7 @@ property :source_version, String, default: '1.14.4'
 property :source_method, String, default: 'all.bash'
 
 # install SCM packages
-property :scm, [true, false], default: true
+property :scm, [true, false], default: false
 property :scm_packages, [String, Array], default: %w[git mercurial]
 
 action_class do
